@@ -1,5 +1,15 @@
 import lejos.nxt.LCD;
 
+/*****************
+ * Group 5
+ * @author Scott Cooper	- 260503452
+ * @author Liqing Ding - 260457392
+ * 
+ * A class to display odometry information. This class should be
+ * used statically from the Odometer. In addition, this class is
+ * used to display the main menu to tell the user which button
+ * is which mode.
+ */
 public class OdometerDisplay{
 	
 	/****

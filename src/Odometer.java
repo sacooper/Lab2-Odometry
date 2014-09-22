@@ -4,6 +4,11 @@ import lejos.nxt.*;
  * Group 5
  * @author Scott Cooper - 260503452
  * @author Liqiang Ding - 260457392
+ * <br>
+ * A class to maintain an odometer based on the tachometer of
+ * the left and right wheels. The calculations use the change in
+ * the tachometer, the wheel radius of the robot, and the wheel
+ * based of the robot to make these calculations.
  */
 public class Odometer extends Thread {		
 	// odometer update period, in ms
@@ -11,21 +16,21 @@ public class Odometer extends Thread {
 
 	/* Wheel based and wheel radius passed in during initialization
 	 * - Changed to this method to allow for only changing the parameters
-	 * 	 once */
+	 * 	 once (in Lab2.java) */
 	private final double 		WHEEL_BASE,
 		WHEEL_RADIUS;
 	
-	// Tile size (difference between lines
+	// Tile size (difference between lines)
 	protected static final double TILE_SIZE = 30.48;
 	
-	/**X, coordinate, Y coordinate, and how much robot has rotated */
+	/* X, coordinate, Y coordinate, and how much the robot has rotated (in radians) */
 	private double x, y, theta;
 	
 	/*****
 	 * Instantiate a new odometer. 
 	 * 
-	 * @param wheelBase The wheelbase of the robot
-	 * @param radius The wheel radius of the robot
+	 * @param wheelBase The wheelbase of the robot (cm)
+	 * @param radius The wheel radius of the robot (cm) 
 	 */
 	public Odometer(double wheelBase, double radius) {
 		x = 0.0;
@@ -54,14 +59,18 @@ public class Odometer extends Thread {
 			 currentTachoL = 0,		// Current tacho L
 			 currentTachoR = 0;		// Current tacho R
 		
-		// Constant used in calculating distance save calculation be declaring once
+		// Constant used in calculating distance. Save calculation by declaring once
 		final double PI_R_180 = Math.PI * WHEEL_RADIUS / 180.0;
-		for(int i = 0; true; i++) {
-			long updateStart = System.currentTimeMillis();
+		
+		// Declare updateStart here to prevent re-allocation each iteration
+		long updateStart;
+		
+		for(int i = 0; true; i++) {		// i used to only run the odometerDisplay every 250ms
+			updateStart = System.currentTimeMillis();
 			
 			double leftDistance, rightDistance, deltaDistance, deltaTheta, dX, dY;
 			
-			// Get current tacho count
+			// Get current tacho counts
 			currentTachoL = Lab2.LEFT_MOTOR.getTachoCount();
 			currentTachoR = Lab2.RIGHT_MOTOR.getTachoCount();
 			
@@ -89,9 +98,8 @@ public class Odometer extends Thread {
 			// Update display every 10 iterations of the odometer
 			if (i%10==0) OdometerDisplay.print(x,  y,  theta);
 			
-			// this ensures that the odometer only runs once every period
+			// Ensure that the odometer only runs once every period
 			long diff = System.currentTimeMillis() - updateStart;
-			
 			if (diff < ODOMETER_PERIOD) {
 				try {
 					Thread.sleep(ODOMETER_PERIOD - diff);
@@ -100,7 +108,7 @@ public class Odometer extends Thread {
 		}
 	}
 	
-	// Getters and Setters for the parameters
+	// Getters and Setters for the parameters x, y, and theta
 	
 	synchronized public void setX(double x) {this.x = x;}
 	

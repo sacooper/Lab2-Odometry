@@ -4,6 +4,10 @@ import lejos.nxt.*;
  * Group 5
  * @author Scott Cooper - 260503452
  * @author Liqiang Ding - 260457392
+ * <br>
+ * Entry point for Lab 2. The user either chooses to float the motors,
+ * to test the odometry (this occurs without correction), or drives the
+ * robot in a 3 tile x 3 tile square.
  */
 public class Lab2 {
 	
@@ -14,10 +18,10 @@ public class Lab2 {
 	
 	// Wheel radius and wheel base (wheel radii where equal)
 	private static final double
-		RADIUS = 2.1,			
-		WIDTH = 15.65;			
+		RADIUS = 2.13,			
+		WIDTH = 16.;			
 	
-	// Motors, now passed in to have only 1 place to change things
+	// Motors. Declared ONLY here to prevent needing to change it in multiple places
 	public static final NXTRegulatedMotor
 		LEFT_MOTOR = Motor.A,
 		RIGHT_MOTOR = Motor.C;
@@ -45,7 +49,7 @@ public class Lab2 {
 			odometer.start();
 			odometryCorrection.start();
 
-			// spawn a new Thread to avoid SquareDriver.drive() from blocking
+			// create a new squareDriver and start it
 			new SquareDriver(LEFT_MOTOR, RIGHT_MOTOR, RADIUS, RADIUS, WIDTH).start();
 			break;
 		default:

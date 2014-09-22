@@ -1,8 +1,9 @@
 import lejos.nxt.*;
 /*****************************
  * Group 5
- * @author Scott Cooper - 260503452
- * 
+ * @author Scott Cooper	- 260503452
+ * @author Liqing Ding - 260457392
+ * <br>
  * A class to move the NXT Robot in a 3 tile x 3 tile square
  */
 public class SquareDriver extends Thread {
@@ -17,7 +18,7 @@ public class SquareDriver extends Thread {
 	
 	private static final double
 		/** Distance to travel (3 tiles) */
-		DISTANCE = Odometer.TILE_SIZE * 3,
+		DISTANCE = Odometer.TILE_SIZE * 2,
 		/** Angle to turn */
 		ANGLE = 90.0;
 	

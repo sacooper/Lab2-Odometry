@@ -5,16 +5,20 @@ import lejos.robotics.Color;
 
 /*******************
  * Group 5
- * OdometryCorrection.java
+ * @author Scott Cooper	- 260503452
+ * @author Liqing Ding - 260457392
+ * <br>
+ * A class to correct whatever odometer is passed into it
+ * based on the known distance between grid lines. When the 
+ * color sensor detects a line, a correction is made, based on
+ * the current and previous angles of the robot.
  */
-
 public class OdometryCorrection extends Thread {
 	
 	/**********
 	 * Class to contain the correction information */
 	private static final class Correction{
-		/****
-		 * Enum to contain if we are increasing or decreasing the correction */
+		/* Enum to contain if we are increasing or decreasing the correction */
 		public static enum Change{PLUS, MINUS};
 		
 		// An option of the last value we had
@@ -44,12 +48,14 @@ public class OdometryCorrection extends Thread {
 	private static final long CORRECTION_PERIOD = 10, WAIT=500;
 	
 	// The threshold of the difference in values that constitutes seeing a lien
-	private static final int THRESHOLD = 10;
+	private static final int THRESHOLD = 11;
 	
-	/* The difference in the last value. This is required because the rotation point is
-	 * NOT at the color sensor, thus seeing a line doesn't necessarily mean that the
-	 * robot is at the same spot as when it saw the line going the other direction */
-	private static final double CHANGE = 11;
+	/* The difference in the last value and the current value after a switch from
+	 * Correction.Change.PLUS to Correctoin.Change.MINUS (or vice-versa). 
+	 * This is required because the rotation point is NOT at the color sensor, thus 
+	 * seeing a line doesn't necessarily mean that the robot is at the same spot as 
+	 * when it saw the line going the other direction (in fact, it DEFINATELLY will not be) */
+	private static final double CHANGE = 4.5;
 	
 	// Member variables for the correction
 	private Odometer odometer;
@@ -91,9 +97,11 @@ public class OdometryCorrection extends Thread {
 
 	// run method (required for Thread)
 	public void run() {
-		long correctionStart;
-		int newColor;
-		boolean sawLine;
+		/* The following variables are declard here to prevent re-allocaation
+		 * each iteration of while(true){...} */
+		long correctionStart;	// When we started the current correction period
+		int newColor;			// The new color we saw
+		boolean sawLine;		// Whether or not we saw a line
 		
 		// The ColorSensor best saw lines with this color
 		cs.setFloodlight(Color.GREEN);		
@@ -125,13 +133,12 @@ public class OdometryCorrection extends Thread {
             		 * on correct the odometer based on when we hit lines. This algorithm also
             		 * takes into account the fact that the position of the robot will be different
             		 * based on from which direction we hit the line, hence the use of +- CHANGE.
-            		 * 
-            		 * During testing we achieved values within +- .25 cm of the actual value.
             		 * */
             		if (theta < 45 || theta >= 315){
             			// Correct Y going "up" ("plus")
             			if (y.getLast().isNone()) {
-            				y.setLast(odometer.getY());
+            				y.setLast(0.5 * Odometer.TILE_SIZE - CHANGE);
+            				odometer.setY(y.getLast().getElse(15.));
             				y.setChange(Correction.Change.PLUS);}
             			else{ try{
             				if (y.getChange().get().equals(Correction.Change.PLUS)){
@@ -140,14 +147,15 @@ public class OdometryCorrection extends Thread {
 	            				odometer.setY(y);
 	            				this.y.setLast(y);}
             				else{
-            					y.setLast(y.getLast().get()-CHANGE);
+            					y.setLast(y.getLast().get() - 2*CHANGE);
             					odometer.setY(y.getLast().get());
             					y.setChange(Correction.Change.PLUS);}}
             			 catch(Option.InvalidOption e){}} // Shouldn't ever happen
             		}else if (theta >= 135 && theta < 225){
             			// Correct Y going "down" ("minus")
             			if (y.getLast().isNone()) {
-            				y.setLast(odometer.getY());
+            				y.setLast(-0.5 * Odometer.TILE_SIZE + CHANGE);
+            				odometer.setY(y.getLast().getElse(-15.));
             				y.setChange(Correction.Change.MINUS);}
             			else{ try{
             				if (y.getChange().get().equals(Correction.Change.MINUS)){
@@ -156,14 +164,15 @@ public class OdometryCorrection extends Thread {
 	            				odometer.setY(y);
 	            				this.y.setLast(y);}
             				else{
-            					y.setLast(y.getLast().get()+CHANGE);
+            					y.setLast(y.getLast().get() + 2*CHANGE);
             					odometer.setY(y.getLast().get());
             					y.setChange(Correction.Change.MINUS);}} 
             			catch(Option.InvalidOption e){}} // Shouldn't ever happen
             		}else if (theta >=45 && theta < 135){
             			// Correct X going "right" ("plus")
             			if (x.getLast().isNone()) {
-            				x.setLast(odometer.getX());
+            				x.setLast(0.5 * Odometer.TILE_SIZE - CHANGE);
+            				odometer.setX(x.getLast().getElse(15.));
             				x.setChange(Correction.Change.PLUS);}
             			else{ try{
             				if (x.getChange().get().equals(Correction.Change.PLUS)){
@@ -172,14 +181,15 @@ public class OdometryCorrection extends Thread {
 	            				odometer.setX(x);
 	            				this.x.setLast(x);}
             				else{
-            					x.setLast(x.getLast().get()-CHANGE);
+            					x.setLast(x.getLast().get() - 2*CHANGE);
             					odometer.setX(x.getLast().get());
             					x.setChange(Correction.Change.PLUS);}}
             			catch(Option.InvalidOption e){}} // Shouldn't ever happen
             		}else{
             			// Correct X going "left" ("minus")
             			if (x.getLast().isNone()) {
-            				x.setLast(odometer.getX());
+            				x.setLast(-0.5 * Odometer.TILE_SIZE + CHANGE);
+            				odometer.setX(x.getLast().getElse(-15.));
             				x.setChange(Correction.Change.MINUS);}
             			else{ try{
             				if (x.getChange().get().equals(Correction.Change.MINUS)){
@@ -188,11 +198,11 @@ public class OdometryCorrection extends Thread {
 	            				odometer.setX(x);
 	            				this.x.setLast(x);}
             				else{
-
-            					x.setLast(x.getLast().get()+CHANGE);
+            					x.setLast(x.getLast().get() + 2*CHANGE);
             					odometer.setX(x.getLast().get());
             					x.setChange(Correction.Change.MINUS);}}
             			catch(Option.InvalidOption e){}}}}} // Shouldn't ever happen
+			
 			lastColor.toSome(newColor);
 			
 			long diff =  System.currentTimeMillis() - correctionStart;
