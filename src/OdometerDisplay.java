@@ -1,11 +1,19 @@
-import lejos.nxt.ColorSensor;
 import lejos.nxt.LCD;
-import lejos.nxt.SensorPort;
 
 public class OdometerDisplay{
 	
-	public static void print(double x, double y, double theta){
+	/****
+	 * Print the current values of x, y, and theta to the screen.
+	 * 
+	 * Modified to be called from the Odometry class, to allow for more control
+	 * 
+	 * @param x The current x value of the odometer in cm
+	 * @param y The current y value of the domoeter in cm
+	 * @param theta The current value of theta (amount the robot has rotated) in radians
+	 */
+	public static void print(final double x, final double y, final double theta){
 		new Thread(new Runnable(){ public void run(){
+			LCD.clear();
 			// clear the lines for displaying odometry information
 			LCD.drawString("X:                  ", 0, 0);
 			LCD.drawString("Y:                  ", 0, 1);
@@ -15,12 +23,17 @@ public class OdometerDisplay{
 			LCD.drawString(formattedDoubleToString(y, 2), 3, 1);
 			LCD.drawString(formattedDoubleToString(theta, 2), 3, 2);
 	
-			ColorSensor cs = new ColorSensor(SensorPort.S1);
-	
-			LCD.drawString("LightVal = " + cs.getNormalizedLightValue(), 0, 3);
-			LCD.drawString("#lines:" + Integer.toString(OdometryCorrection.counter),0, 4);
-			}}).start();}
+			// Get the last color value the OdometryCorrection has seen 
+			// (prevent multiple instances of the color sensor)
+			LCD.drawString("LightVal = " +OdometryCorrection.getLastColor(), 0, 3);
+			LCD.drawString("#lines:" + Integer.toString(OdometryCorrection.counter),0, 4);}}).start();}
 
+	/*****
+	 * Get a properly formated value of x to places
+	 * @param x The value to format
+	 * @param places The number of decimal places
+	 * @return A string containing "x" to "places"
+	 */
 	private static String formattedDoubleToString(double x, int places) {
 		String result = "";
 		String stack = "";
@@ -56,6 +69,10 @@ public class OdometerDisplay{
 		return result;
 	}
 
+	/********
+	 * Print the initial main menu, with options for floating the motor (left)
+	 * or Driving in a square (right)
+	 */
 	public static void printMainMenu() {
 		// clear the display
 		LCD.clear();

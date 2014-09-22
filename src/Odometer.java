@@ -3,46 +3,40 @@ import lejos.nxt.*;
 /********************
  * Group 5
  * @author Scott Cooper - 260503452
+ * @author Liqiang Ding - 260457392
  */
-public class Odometer extends Thread {	
-	private static final NXTRegulatedMotor 
-		leftMotor = Motor.A,
-		rightMotor = Motor.C;
-	
+public class Odometer extends Thread {		
 	// odometer update period, in ms
 	private static final int ODOMETER_PERIOD = 25;
 
-	private static final double 		WHEEL_BASE = 15,
-		WHEEL_RADIUS = 2.16;
+	/* Wheel based and wheel radius passed in during initialization
+	 * - Changed to this method to allow for only changing the parameters
+	 * 	 once */
+	private final double 		WHEEL_BASE,
+		WHEEL_RADIUS;
 	
+	// Tile size (difference between lines
 	protected static final double TILE_SIZE = 30.48;
-	
-	private long 
-		// Tacho L at last sample
-		previousTachoL,
-		// Tacho R at last sample
-		previousTachoR,
-		// Current tacho L
-		currentTachoL,
-        // Current tacho R
-		currentTachoR;
 	
 	/**X, coordinate, Y coordinate, and how much robot has rotated */
 	private double x, y, theta;
 	
 	/*****
 	 * Instantiate a new odometer. 
+	 * 
+	 * @param wheelBase The wheelbase of the robot
+	 * @param radius The wheel radius of the robot
 	 */
-	public Odometer() {
+	public Odometer(double wheelBase, double radius) {
 		x = 0.0;
 		y = 0.0;
 		theta = 0.0;
+		this.WHEEL_BASE = wheelBase;
+		this.WHEEL_RADIUS = radius;
 		
 		
-		leftMotor.resetTachoCount();
-		rightMotor.resetTachoCount();
-		
-		previousTachoL = previousTachoR = currentTachoL = currentTachoR = 0;
+		Lab2.LEFT_MOTOR.resetTachoCount();
+		Lab2.RIGHT_MOTOR.resetTachoCount();
 		
 	    LCD.clear();
 	    LCD.drawString("Odometer Demo",0,0,false);
@@ -55,25 +49,35 @@ public class Odometer extends Thread {
 	 * Run the odometer
 	 */
 	public void run() {
+		long previousTachoL = 0,	// Tacho L at last sample
+			 previousTachoR = 0,	// Tacho R at last sample
+			 currentTachoL = 0,		// Current tacho L
+			 currentTachoR = 0;		// Current tacho R
+		
+		// Constant used in calculating distance save calculation be declaring once
+		final double PI_R_180 = Math.PI * WHEEL_RADIUS / 180.0;
 		for(int i = 0; true; i++) {
 			long updateStart = System.currentTimeMillis();
-			// put (some of) your odometer code here
-			double leftDistance, rightDistance, deltaDistance, deltaTheta, dX, dY;
-			currentTachoL = leftMotor.getTachoCount();
-			currentTachoR = rightMotor.getTachoCount();
 			
-			final double PI_R_180 = Math.PI * WHEEL_RADIUS / 180.;
+			double leftDistance, rightDistance, deltaDistance, deltaTheta, dX, dY;
+			
+			// Get current tacho count
+			currentTachoL = Lab2.LEFT_MOTOR.getTachoCount();
+			currentTachoR = Lab2.RIGHT_MOTOR.getTachoCount();
+			
+			// Calculate left and right distances based on change in tachometer
 			leftDistance = PI_R_180 * (currentTachoL - previousTachoL);
 			rightDistance = PI_R_180 * (currentTachoR - previousTachoR);
 			
 			previousTachoL = currentTachoL;
 			previousTachoR = currentTachoR;
 			
+			// Calculate change in distance and theta based on distance traveled
 			deltaDistance = 0.5 * (leftDistance + rightDistance);
 			deltaTheta = (leftDistance - rightDistance) / WHEEL_BASE;
 
 			synchronized (this) {
-				// don't use the variables x, y, or theta anywhere but here!
+				// don't use the variables x, y, or theta anywhere but here
 				theta += deltaTheta;
 				
 				dX = deltaDistance * Math.sin(theta);
@@ -87,6 +91,7 @@ public class Odometer extends Thread {
 			
 			// this ensures that the odometer only runs once every period
 			long diff = System.currentTimeMillis() - updateStart;
+			
 			if (diff < ODOMETER_PERIOD) {
 				try {
 					Thread.sleep(ODOMETER_PERIOD - diff);

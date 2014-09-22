@@ -13,7 +13,7 @@ public class SquareDriver extends Thread {
 		/** Wheel speed when rotating*/
 		ROTATE_SPEED = 150,
 		/** Wheel acceleration */
-		ACCELERATION = 1500;
+		ACCELERATION = 500;
 	
 	private static final double
 		/** Distance to travel (3 tiles) */
@@ -45,7 +45,7 @@ public class SquareDriver extends Thread {
 	/*******
 	 * Convert a distance to the number of degrees to turn using the wheel radius
 	 * 
-	 * @param radius The radius of the wheel thats turning
+	 * @param radius The radius of the wheel that's turning
 	 * @param distance The distance to travel
 	 * @return The amount the wheel should turn in degrees
 	 */
@@ -76,7 +76,7 @@ public class SquareDriver extends Thread {
 		leftMotor.stop(); leftMotor.setAcceleration(ACCELERATION);
 		rightMotor.stop(); rightMotor.setAcceleration(ACCELERATION);
 
-		// wait 5 seconds
+		// wait 2 seconds
 		try {
 			Thread.sleep(2000);
 		} catch (InterruptedException e) {}
@@ -100,8 +100,10 @@ public class SquareDriver extends Thread {
 			leftMotor.setSpeed(ROTATE_SPEED);
 			rightMotor.setSpeed(ROTATE_SPEED);
 
+			OdometryCorrection.disable();		// Disable the OdometryCorrection when turning
 			leftMotor.rotate(convertAngle(leftRadius, width, ANGLE), true);
 			rightMotor.rotate(-convertAngle(rightRadius, width, ANGLE), false);
+			OdometryCorrection.enable();		// Turn OdometryCorrection back on
 		}
 	}
 }
